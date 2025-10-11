@@ -160,6 +160,7 @@ export default function Performance() {
                 <TabsList>
                   <TabsTrigger value="trend" data-testid="tab-trend">Score Trend</TabsTrigger>
                   <TabsTrigger value="skills" data-testid="tab-skills">Skills Breakdown</TabsTrigger>
+                  <TabsTrigger value="attempts" data-testid="tab-attempts">Recent Attempts</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="trend" className="space-y-4">
@@ -218,6 +219,55 @@ export default function Performance() {
                           <Bar dataKey="average" fill="hsl(var(--chart-1))" name="Average Score (%)" />
                         </BarChart>
                       </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="attempts" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Recent Attempts</CardTitle>
+                      <CardDescription>Your quiz attempt history</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {filteredAttempts
+                          .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+                          .map((attempt) => (
+                            <div 
+                              key={attempt.id}
+                              className="flex items-center justify-between p-4 rounded-lg border bg-card hover-elevate"
+                              data-testid={`attempt-${attempt.id}`}
+                            >
+                              <div className="space-y-1">
+                                <p className="font-medium" data-testid={`text-skill-${attempt.id}`}>{attempt.skill.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(attempt.completedAt).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-bold" data-testid={`text-score-${attempt.id}`}>
+                                  {attempt.score}/{attempt.totalQuestions}
+                                </div>
+                                <Badge 
+                                  variant={
+                                    (attempt.score / attempt.totalQuestions) >= 0.8 ? "default" :
+                                    (attempt.score / attempt.totalQuestions) >= 0.7 ? "secondary" :
+                                    "destructive"
+                                  }
+                                >
+                                  {Math.round((attempt.score / attempt.totalQuestions) * 100)}%
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
