@@ -79,7 +79,6 @@ Response:
 
 **Database Schema**
 
-## Database Schema
 
 The application uses a MySQL database with the following tables and relationships.
 
