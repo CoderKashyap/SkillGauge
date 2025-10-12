@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "@shared/schema";
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const JWT_SECRET = process.env.SESSION_SECRET;
 
 if (!JWT_SECRET) {
@@ -32,7 +35,7 @@ export function verifyToken(token: string): any {
 
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "No token provided" });
   }

@@ -1,56 +1,86 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import {
+  mysqlTable,
+  varchar,
+  text,
+  int,
+  datetime,
+  boolean,
+  json,
+} from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table with role-based access
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
+// Users table
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .default(sql`(UUID())`), // MySQL UUID generator
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  email: varchar("email", { length: 150 }).notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("user"), // 'admin' or 'user'
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  role: varchar("role", { length: 50 }).notNull().default("user"),
+  createdAt: datetime("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Skill categories
-export const skills = pgTable("skills", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull().unique(),
+export const skills = mysqlTable("skills", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
   description: text("description"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: datetime("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Questions linked to skills
-export const questions = pgTable("questions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  skillId: varchar("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
+export const questions = mysqlTable("questions", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  skillId: varchar("skill_id", { length: 36 })
+    .notNull()
+    .references(() => skills.id, { onDelete: "cascade" }),
   questionText: text("question_text").notNull(),
-  options: jsonb("options").notNull().$type<string[]>(), // Array of answer options
+  options: json("options").notNull().$type<string[]>(),
   correctAnswer: text("correct_answer").notNull(),
-  difficulty: text("difficulty").notNull().default("medium"), // easy, medium, hard
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  difficulty: varchar("difficulty", { length: 20 })
+    .notNull()
+    .default("medium"),
+  createdAt: datetime("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Quiz attempts
-export const quizAttempts = pgTable("quiz_attempts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  skillId: varchar("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
-  score: integer("score").notNull(),
-  totalQuestions: integer("total_questions").notNull(),
-  startedAt: timestamp("started_at").notNull().defaultNow(),
-  completedAt: timestamp("completed_at").notNull().defaultNow(),
+export const quizAttempts = mysqlTable("quiz_attempts", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  userId: varchar("user_id", { length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  skillId: varchar("skill_id", { length: 36 })
+    .notNull()
+    .references(() => skills.id, { onDelete: "cascade" }),
+  score: int("score").notNull(),
+  totalQuestions: int("total_questions").notNull(),
+  startedAt: datetime("started_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  completedAt: datetime("completed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Individual quiz answers
-export const quizAnswers = pgTable("quiz_answers", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  attemptId: varchar("attempt_id").notNull().references(() => quizAttempts.id, { onDelete: "cascade" }),
-  questionId: varchar("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
+export const quizAnswers = mysqlTable("quiz_answers", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  attemptId: varchar("attempt_id", { length: 36 })
+    .notNull()
+    .references(() => quizAttempts.id, { onDelete: "cascade" }),
+  questionId: varchar("question_id", { length: 36 })
+    .notNull()
+    .references(() => questions.id, { onDelete: "cascade" }),
   selectedAnswer: text("selected_answer").notNull(),
   isCorrect: boolean("is_correct").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: datetime("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Relations
@@ -102,22 +132,25 @@ export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "user"]).optional(),
 }).omit({ id: true, createdAt: true });
 
-export const insertSkillSchema = createInsertSchema(skills).omit({ id: true, createdAt: true });
+export const insertSkillSchema = createInsertSchema(skills).omit({
+  id: true,
+  createdAt: true,
+});
 
 export const insertQuestionSchema = createInsertSchema(questions, {
   options: z.array(z.string()).min(2).max(6),
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
 }).omit({ id: true, createdAt: true });
 
-export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({ 
-  id: true, 
-  startedAt: true, 
-  completedAt: true 
+export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
 });
 
-export const insertQuizAnswerSchema = createInsertSchema(quizAnswers).omit({ 
-  id: true, 
-  createdAt: true 
+export const insertQuizAnswerSchema = createInsertSchema(quizAnswers).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Login schema

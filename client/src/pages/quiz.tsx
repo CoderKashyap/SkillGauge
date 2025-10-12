@@ -61,6 +61,9 @@ export default function Quiz() {
   const selectedAnswer = answers[currentQuestion?.id];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
+  // console.log("currentQuestion", currentQuestion);
+
+
   const handleAnswerSelect = (value: string) => {
     if (!currentQuestion) return;
     setAnswers({ ...answers, [currentQuestion.id]: value });
@@ -182,7 +185,7 @@ export default function Quiz() {
         </div>
 
         <div className="w-full bg-muted rounded-full h-2">
-          <div 
+          <div
             className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
@@ -202,24 +205,25 @@ export default function Quiz() {
           </CardHeader>
           <CardContent className="space-y-4">
             <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-              {currentQuestion.options.map((option, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center space-x-3 border rounded-lg p-4 hover-elevate active-elevate-2"
-                >
-                  <RadioGroupItem 
-                    value={option} 
-                    id={`option-${index}`}
-                    data-testid={`radio-option-${index}`}
-                  />
-                  <Label 
-                    htmlFor={`option-${index}`} 
-                    className="flex-1 cursor-pointer"
+              {currentQuestion?.options &&
+                JSON.parse(currentQuestion.options).map((option, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-3 border rounded-lg p-4 hover-elevate active-elevate-2"
                   >
-                    {option}
-                  </Label>
-                </div>
-              ))}
+                    <RadioGroupItem
+                      value={option}
+                      id={`option-${index}`}
+                      data-testid={`radio-option-${index}`}
+                    />
+                    <Label
+                      htmlFor={`option-${index}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      {option}
+                    </Label>
+                  </div>
+                ))}
             </RadioGroup>
 
             <div className="flex gap-4 pt-4">

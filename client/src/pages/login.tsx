@@ -11,10 +11,13 @@ import { Link, useLocation } from "wouter";
 import { GraduationCap } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
+
 export default function Login() {
   const { login } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useLocation(); // <-- destructure to get setter
+
+
 
   const form = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
@@ -32,7 +35,13 @@ export default function Login() {
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
-      setLocation(response.user.role === "admin" ? "/admin" : "/dashboard");
+
+      console.log(response, "response");
+
+      setLocation(response?.user?.role === "admin" ? "/admin" : "/dashboard");
+      setLocation(response?.user?.role === "user" ? "/dashboard" : "/admin");
+
+
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -69,8 +78,8 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Enter your username" 
+                        <Input
+                          placeholder="Enter your username"
                           {...field}
                           data-testid="input-username"
                         />
@@ -86,9 +95,9 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Enter your password" 
+                        <Input
+                          type="password"
+                          placeholder="Enter your password"
                           {...field}
                           data-testid="input-password"
                         />
@@ -97,8 +106,8 @@ export default function Login() {
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full"
                   disabled={form.formState.isSubmitting}
                   data-testid="button-login"

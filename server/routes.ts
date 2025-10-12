@@ -2,12 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { 
-  insertUserSchema, 
-  loginSchema, 
-  insertSkillSchema, 
+import {
+  insertUserSchema,
+  loginSchema,
+  insertSkillSchema,
   insertQuestionSchema,
-  type User 
+  type User
 } from "@shared/schema";
 import { generateToken, authenticate, requireAdmin, type AuthRequest } from "./middleware/auth";
 
@@ -33,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
     try {
       const data = insertUserSchema.parse(req.body);
-      
+
       const existingUser = await storage.getUserByUsername(data.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
@@ -55,6 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ user: userWithoutPassword, token });
     } catch (error: any) {
+      console.log(error, "error");
+
       res.status(400).json({ message: error.message || "Registration failed" });
     }
   });
@@ -62,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const data = loginSchema.parse(req.body);
-      
+
       const user = await storage.getUserByUsername(data.username);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -140,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/questions", authenticate, async (req: AuthRequest, res) => {
     try {
       const questions = await storage.getAllQuestions();
-      
+
       // Include skill data for each question
       const questionsWithSkills = await Promise.all(
         questions.map(async (question) => {
@@ -148,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return { ...question, skill };
         })
       );
-      
+
       res.json(questionsWithSkills);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -208,22 +210,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Quiz Attempts Routes
+  // app.post("/api/quiz-attempts", authenticate, async (req: AuthRequest, res) => {
+  //   try {
+  //     const { skillId, answers } = req.body;
+
+  //     if (!req.user) {
+  //       return res.status(401).json({ message: "Unauthorized" });
+  //     }
+
+  //     // Get all questions for the skill
+  //     const questions = await storage.getQuestionsBySkill(skillId);
+
+  //     if (questions.length === 0) {
+  //       return res.status(400).json({ message: "No questions available for this skill" });
+  //     }
+
+  //     // Calculate score
+  //     let score = 0;
+  //     const quizAnswersData = [];
+
+  //     for (const answer of answers) {
+  //       const question = questions.find(q => q.id === answer.questionId);
+  //       if (question) {
+  //         const isCorrect = answer.selectedAnswer === question.correctAnswer;
+  //         if (isCorrect) score++;
+
+  //         quizAnswersData.push({
+  //           questionId: answer.questionId,
+  //           selectedAnswer: answer.selectedAnswer,
+  //           isCorrect,
+  //         });
+  //       }
+  //     }
+
+  //     // Create quiz attempt
+  //     const attempt = await storage.createQuizAttempt({
+  //       userId: req.user.id,
+  //       skillId,
+  //       score,
+  //       totalQuestions: questions.length,
+  //     });
+
+  //     // Save individual answers
+  //     for (const answerData of quizAnswersData) {
+  //       await storage.createQuizAnswer({
+  //         attemptId: attempt.id,
+  //         ...answerData,
+  //       });
+  //     }
+
+  //     // Invalidate cache
+  //     reportCache.clear();
+
+  //     res.json(attempt);
+  //   } catch (error: any) {
+  //     res.status(500).json({ message: error.message });
+  //   }
+  // });
+
+
+
+
   app.post("/api/quiz-attempts", authenticate, async (req: AuthRequest, res) => {
     try {
       const { skillId, answers } = req.body;
-      
-      if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized" });
+
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "Unauthorized: User not found" });
       }
 
-      // Get all questions for the skill
+      if (!Array.isArray(answers) || answers.length === 0) {
+        return res.status(400).json({ message: "No answers provided" });
+      }
+
       const questions = await storage.getQuestionsBySkill(skillId);
-      
-      if (questions.length === 0) {
+      if (!questions || questions.length === 0) {
         return res.status(400).json({ message: "No questions available for this skill" });
       }
 
-      // Calculate score
       let score = 0;
       const quizAnswersData = [];
 
@@ -232,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (question) {
           const isCorrect = answer.selectedAnswer === question.correctAnswer;
           if (isCorrect) score++;
-          
+
           quizAnswersData.push({
             questionId: answer.questionId,
             selectedAnswer: answer.selectedAnswer,
@@ -241,7 +305,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create quiz attempt
       const attempt = await storage.createQuizAttempt({
         userId: req.user.id,
         skillId,
@@ -249,22 +312,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalQuestions: questions.length,
       });
 
-      // Save individual answers
-      for (const answerData of quizAnswersData) {
-        await storage.createQuizAnswer({
-          attemptId: attempt.id,
-          ...answerData,
-        });
+      console.log(attempt?.id, "attempt");
+
+
+      if (!attempt?.id) {
+        return res.status(500).json({ message: "Failed to create quiz attempt" });
       }
 
-      // Invalidate cache
+      // Save all answers
+      await Promise.all(
+        quizAnswersData.map(answerData =>
+          storage.createQuizAnswer({
+            attemptId: attempt.id,
+            ...answerData,
+          })
+        )
+      );
+
       reportCache.clear();
 
-      res.json(attempt);
+      return res.json(attempt);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error(error);
+      return res.status(500).json({ message: error.message });
     }
   });
+
+
+
+
 
   app.get("/api/quiz-attempts/my-attempts", authenticate, async (req: AuthRequest, res) => {
     try {
@@ -279,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const attempts = await storage.getUserAttempts(req.user.id);
-      
+
       // Include skill data
       const attemptsWithSkills = await Promise.all(
         attempts.map(async (attempt) => {
@@ -304,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const attempts = await storage.getAllAttempts();
-      
+
       // Include user and skill data
       const attemptsWithRelations = await Promise.all(
         attempts.map(async (attempt) => {
