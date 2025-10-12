@@ -12,11 +12,11 @@ A full-stack Quiz application with authentication, skill-based quizzes, and scor
 
 ## Setup Instructions
 
-### Backend
 
-1. Clone the repo:
 
 ```bash
+
+1. Clone the repo:
 git clone https://github.com/CoderKashyap/SkillGauge.git
 
 2. Install dependencies
