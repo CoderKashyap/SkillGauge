@@ -38,9 +38,11 @@ export default function Login() {
 
       console.log(response, "response");
 
-      setLocation(response?.user?.role === "admin" ? "/admin" : "/dashboard");
-      setLocation(response?.user?.role === "user" ? "/dashboard" : "/admin");
-
+      setTimeout(() => {
+        const redirectPath =
+          response?.user?.role === "admin" ? "/admin/skills" : "/dashboard";
+        setLocation(redirectPath);
+      }, 0);
 
     } catch (error: any) {
       toast({

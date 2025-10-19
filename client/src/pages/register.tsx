@@ -33,7 +33,12 @@ export default function Register() {
         title: "Account created!",
         description: "Welcome to QuizMaster. Start taking quizzes now.",
       });
-      setLocation("/dashboard");
+      // setLocation("/dashboard");
+
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 0);
+
     } catch (error: any) {
       toast({
         title: "Registration failed",
@@ -70,8 +75,8 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Choose a username" 
+                        <Input
+                          placeholder="Choose a username"
                           {...field}
                           data-testid="input-username"
                         />
@@ -87,9 +92,9 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter your email" 
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
                           {...field}
                           data-testid="input-email"
                         />
@@ -105,9 +110,9 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Create a password (min 6 characters)" 
+                        <Input
+                          type="password"
+                          placeholder="Create a password (min 6 characters)"
                           {...field}
                           data-testid="input-password"
                         />
@@ -116,8 +121,8 @@ export default function Register() {
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full"
                   disabled={form.formState.isSubmitting}
                   data-testid="button-register"
