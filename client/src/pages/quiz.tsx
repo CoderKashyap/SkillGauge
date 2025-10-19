@@ -8,15 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Brain, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+// import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 
 export default function Quiz() {
   const [, params] = useRoute("/quiz/:skillId");
-  const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  // const [, setLocation] = useLocation();
+  // const { user } = useAuth();
   const { toast } = useToast();
   const skillId = params?.skillId;
 
@@ -205,8 +205,8 @@ export default function Quiz() {
           </CardHeader>
           <CardContent className="space-y-4">
             <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-              {currentQuestion?.options &&
-                JSON.parse(currentQuestion.options).map((option, index) => (
+              {/* {currentQuestion?.options && JSON.parse(currentQuestion.options).map((option, index) => ( */}
+              {currentQuestion.options.map((option, index) => (
                   <div
                     key={index}
                     className="flex items-center space-x-3 border rounded-lg p-4 hover-elevate active-elevate-2"

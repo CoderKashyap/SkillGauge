@@ -85,15 +85,15 @@ export class DatabaseStorage implements IStorage {
   // }
 
 
-async createUser(insertUser: InsertUser): Promise<User> {
-  const id = uuidv4();
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = uuidv4();
 
-  await db.insert(users).values({ id, ...insertUser });
+    await db.insert(users).values({ id, ...insertUser });
 
-  const [newUser] = await db.select().from(users).where(eq(users.id, id));
+    const [newUser] = await db.select().from(users).where(eq(users.id, id));
 
-  return newUser;
-}
+    return newUser;
+  }
 
 
   async getAllUsers(): Promise<User[]> {
@@ -173,23 +173,88 @@ async createUser(insertUser: InsertUser): Promise<User> {
   // }
 
 
+  // async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
+  //   // 1. Insert row
+  //   const result: any = await db.insert(quizAttempts).values(insertAttempt);
+
+  //   // 2. Get insertId from first element
+  //   const insertedId = result?.[0]?.insertId;
+  //   if (!insertedId) throw new Error("Failed to get inserted quiz attempt ID");
+
+  //   // 3. Fetch the inserted row
+  //   const [attempt] = await db.select().from(quizAttempts).where(eq(quizAttempts.id, insertedId));
+  //   if (!attempt) throw new Error("Inserted quiz attempt not found");
+
+  //   console.log("Attempt fetched:", attempt);
+  //   return attempt;
+  // }
+
   async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
-    // 1. Insert row
-    const result: any = await db.insert(quizAttempts).values(insertAttempt);
+    // Generate UUID if not provided
+    const id = uuidv4();
 
-    // 2. Get insertId from first element
-    const insertedId = result?.[0]?.insertId;
-    if (!insertedId) throw new Error("Failed to get inserted quiz attempt ID");
+    // Insert row with the generated ID
+    await db.insert(quizAttempts).values({ ...insertAttempt, id });
 
-    // 3. Fetch the inserted row
-    const [attempt] = await db.select().from(quizAttempts).where(eq(quizAttempts.id, insertedId));
+    // Fetch the inserted row
+    const [attempt] = await db
+      .select()
+      .from(quizAttempts)
+      .where(eq(quizAttempts.id, id));
+
     if (!attempt) throw new Error("Inserted quiz attempt not found");
 
     console.log("Attempt fetched:", attempt);
     return attempt;
   }
 
+  async createQuizAnswer(insertAnswer: InsertQuizAnswer): Promise<QuizAnswer> {
+    const id = uuidv4();
 
+    await db.insert(quizAnswers).values({ ...insertAnswer, id });
+
+    const [answer] = await db
+      .select()
+      .from(quizAnswers)
+      .where(eq(quizAnswers.id, id));
+
+    if (!answer) throw new Error("Inserted quiz answer not found");
+
+    return answer;
+  }
+
+  // async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
+  //   // 1. Insert row
+  //   const result: any = await db.insert(quizAttempts).values(insertAttempt);
+
+  //   // 2. Extract insertId correctly (Drizzle returns { insertId })
+  //   const insertedId = result?.insertId;
+  //   if (!insertedId) throw new Error("Failed to get inserted quiz attempt ID");
+
+  //   // 3. Fetch the inserted row
+  //   const [attempt] = await db
+  //     .select()
+  //     .from(quizAttempts)
+  //     .where(eq(quizAttempts.id, insertedId));
+
+  //   if (!attempt) throw new Error("Inserted quiz attempt not found");
+
+  //   console.log("Attempt fetched:", attempt);
+  //   return attempt;
+  // }
+
+
+  // async createQuizAnswer(insertAnswer: InsertQuizAnswer): Promise<QuizAnswer> {
+  //   const result: any = await db.insert(quizAnswers).values(insertAnswer);
+
+  //   const insertedId = result?.[0]?.insertId;
+  //   if (!insertedId) throw new Error("Failed to get inserted quiz answer ID");
+
+  //   const [answer] = await db.select().from(quizAnswers).where(eq(quizAnswers.id, insertedId));
+  //   if (!answer) throw new Error("Inserted quiz answer not found");
+
+  //   return answer;
+  // }
 
 
   async getUserAttempts(userId: string): Promise<QuizAttempt[]> {
@@ -204,26 +269,7 @@ async createUser(insertUser: InsertUser): Promise<User> {
     return db.select().from(quizAttempts).orderBy(desc(quizAttempts.id));
   }
 
-  // ===== QUIZ ANSWERS =====
-  // async createQuizAnswer(insertAnswer: InsertQuizAnswer): Promise<QuizAnswer> {
-  //   const result = await db.insert(quizAnswers).values(insertAnswer);
-  //   const insertedId = (result as any).insertId;
 
-  //   const [answer] = await db.select().from(quizAnswers).where(eq(quizAnswers.id, insertedId));
-  //   return answer;
-  // }
-
-  async createQuizAnswer(insertAnswer: InsertQuizAnswer): Promise<QuizAnswer> {
-    const result: any = await db.insert(quizAnswers).values(insertAnswer);
-
-    const insertedId = result?.[0]?.insertId;
-    if (!insertedId) throw new Error("Failed to get inserted quiz answer ID");
-
-    const [answer] = await db.select().from(quizAnswers).where(eq(quizAnswers.id, insertedId));
-    if (!answer) throw new Error("Inserted quiz answer not found");
-
-    return answer;
-  }
 
 
 
