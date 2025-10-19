@@ -18,6 +18,8 @@ import {
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
+import { v4 as uuidv4 } from "uuid";
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -68,19 +70,31 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    // ✅ Insert the user
-    const result = await db.insert(users).values(insertUser);
+  // async createUser(insertUser: InsertUser): Promise<User> {
+  //   // ✅ Insert the user
+  //   const result = await db.insert(users).values(insertUser);
 
-    // ✅ Get the inserted ID from MySQL driver (drizzle-mysql returns an object like { insertId })
-    const insertedId = (result as any).insertId;
+  //   // ✅ Get the inserted ID from MySQL driver (drizzle-mysql returns an object like { insertId })
+  //   const insertedId = (result as any).insertId;
 
-    // ✅ Fetch the newly created user
-    const [newUser] = await db.select().from(users).where(eq(users.id, insertedId));
+  //   // ✅ Fetch the newly created user
+  //   const [newUser] = await db.select().from(users).where(eq(users.id, insertedId));
 
-    // ✅ Return the user for token generation
-    return newUser;
-  }
+  //   // ✅ Return the user for token generation
+  //   return newUser;
+  // }
+
+
+async createUser(insertUser: InsertUser): Promise<User> {
+  const id = uuidv4();
+
+  await db.insert(users).values({ id, ...insertUser });
+
+  const [newUser] = await db.select().from(users).where(eq(users.id, id));
+
+  return newUser;
+}
+
 
   async getAllUsers(): Promise<User[]> {
     return db.select().from(users).orderBy(desc(users.id));
