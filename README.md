@@ -12,8 +12,6 @@ A full-stack Quiz application with authentication, skill-based quizzes, and scor
 
 ## Setup Instructions
 
-
-
 ```bash
 
 1. Clone the repo:
@@ -152,9 +150,7 @@ Stores each answer submitted for a specific quiz attempt.
 | isCorrect      | BOOLEAN      | Indicates if the answer was correct.   |
 | createdAt      | DATETIME     | Timestamp of the record.               |
 
----
 
-### Relationships
 
 - A **user** can have multiple **quiz attempts**.
 - Each **skill** can have multiple **questions**.
