@@ -31,7 +31,7 @@ JWT_SECRET=yourjwtsecret
 
 5. Start application:
 npm run dev
-
+```
 
 
 
