@@ -37,6 +37,8 @@ npm run dev
 
 **API Documentation**
 
+
+```bash
 **Auth**
 
 POST /api/auth/login
@@ -71,7 +73,7 @@ Response:
   "score": 1,
   "totalQuestions": 2
 }
-
+```
 
 
 
